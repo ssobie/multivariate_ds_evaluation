@@ -4,7 +4,7 @@
 ##can be added to the map.
 
 source('/storage/data/projects/rci/assessments/code/resource.region.map.support.r',chdir=T)
-source('/storage/home/ssobie/code/repos/MBC/R/figures/pnw.canrcm4.plot.r',chdir=T)
+source('/storage/home/ssobie/code/repos/multivariate_ds_evaluation/pnw.canrcm4.plot.r',chdir=T)
 
 library(graticule)
 library(raster)
@@ -36,7 +36,7 @@ mask.proj <- projectRaster(aplin.mask,crs=CRS(pnw.crs))
 clim.dir <- "/storage/data/climate/downscale/RCM/CanRCM4/daily/NAM_44/rcm_grid/Derived/spearman/"
 var.pairs <- c('pr_tasmax','pr_tasmin','pr_tas','tasmax_tasmin')
 
-obs <- 'CanRCM4'
+obs <- 'ANUSPLIN'
 var.pair <- 'pr_tasmax'
 main.title <- paste0(obs,' Spearman Correlation (Precipitation and Max. Temperature)')
 
