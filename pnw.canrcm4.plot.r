@@ -80,17 +80,17 @@ make_pnw_plot <- function(morph.name,var.name,plot.dir,plot.file,plot.title,
 
    na.region <- 'north_america_state_provincial_boundaries'
    na.shp <- readOGR(shape.dir, na.region, stringsAsFactors=F, verbose=F)
-   na.proj.shp <- spTransform(na.shp,CRS(pnw.crs))
-   ocean.shp <- readOGR(shape.dir, 'ocean_sym_diff_continents', stringsAsFactors=F, verbose=F)
-   us.shp <- readOGR(shape.dir, 'united_states', stringsAsFactors=F, verbose=F)
-   lakes.shp <- readOGR(shape.dir, 'lakes', stringsAsFactors=F, verbose=F)
-   rivers.shp <- readOGR(shape.dir, 'rivers', stringsAsFactors=F, verbose=F)
+##   na.proj.shp <- spTransform(na.shp,CRS(pnw.crs))
+##   ocean.shp <- readOGR(shape.dir, 'ocean_sym_diff_continents', stringsAsFactors=F, verbose=F)
+##   us.shp <- readOGR(shape.dir, 'united_states', stringsAsFactors=F, verbose=F)
+##   lakes.shp <- readOGR(shape.dir, 'lakes', stringsAsFactors=F, verbose=F)
+##   rivers.shp <- readOGR(shape.dir, 'rivers', stringsAsFactors=F, verbose=F)
 
-   ocean.transformed <- spTransform(ocean.shp, CRS(pnw.crs))
-   us.transformed <- spTransform(us.shp, CRS(pnw.crs))
+##   ocean.transformed <- spTransform(ocean.shp, CRS(pnw.crs))
+##   us.transformed <- spTransform(us.shp, CRS(pnw.crs))
    can.transformed <- spTransform(can.shp, CRS(pnw.crs))
-   lakes.transformed <- spTransform(lakes.shp, CRS(pnw.crs))
-   rivers.transformed <- spTransform(rivers.shp, CRS(pnw.crs))
+##   lakes.transformed <- spTransform(lakes.shp, CRS(pnw.crs))
+##   rivers.transformed <- spTransform(rivers.shp, CRS(pnw.crs))
 
    ###plot.dir <- '/storage/data/projects/rci/weather_files/plots/'
    write.file <- paste0(plot.dir,plot.file)
@@ -160,24 +160,24 @@ make_pnw_multiplot <- function(morph.name,var.name,plot.title,
    xtks <- get.proj.xaxis(lons,pnw.crs,plot.window.ylim)
    ytks <- get.proj.yaxis(lats,pnw.crs,plot.window.xlim)
 
-   shape.dir <- '/storage/data/gis/basedata/base_layers'
-
-   provinces.region <- 'canada_provinces'
+   ##shape.dir <- '/storage/data/gis/basedata/base_layers'
+   shape.dir <- '/storage/data/projects/rci/data/assessments/shapefiles/bc_common/'
+   provinces.region <- 'bc' ##'canada_provinces'
    can.shp <- readOGR(shape.dir, provinces.region, stringsAsFactors=F, verbose=F)
 
    na.region <- 'north_america_state_provincial_boundaries'
-   na.shp <- readOGR(shape.dir, na.region, stringsAsFactors=F, verbose=F)
-   na.proj.shp <- spTransform(na.shp,CRS(pnw.crs))
-   ocean.shp <- readOGR(shape.dir, 'ocean_sym_diff_continents', stringsAsFactors=F, verbose=F)
-   us.shp <- readOGR(shape.dir, 'united_states', stringsAsFactors=F, verbose=F)
-   lakes.shp <- readOGR(shape.dir, 'lakes', stringsAsFactors=F, verbose=F)
-   rivers.shp <- readOGR(shape.dir, 'rivers', stringsAsFactors=F, verbose=F)
+##   na.shp <- readOGR(shape.dir, na.region, stringsAsFactors=F, verbose=F)
+##   na.proj.shp <- spTransform(na.shp,CRS(pnw.crs))
+##   ocean.shp <- readOGR(shape.dir, 'ocean_sym_diff_continents', stringsAsFactors=F, verbose=F)
+##   us.shp <- readOGR(shape.dir, 'united_states', stringsAsFactors=F, verbose=F)
+##   lakes.shp <- readOGR(shape.dir, 'lakes', stringsAsFactors=F, verbose=F)
+##   rivers.shp <- readOGR(shape.dir, 'rivers', stringsAsFactors=F, verbose=F)
 
-   ocean.transformed <- spTransform(ocean.shp, CRS(pnw.crs))
-   us.transformed <- spTransform(us.shp, CRS(pnw.crs))
+##   ocean.transformed <- spTransform(ocean.shp, CRS(pnw.crs))
+##   us.transformed <- spTransform(us.shp, CRS(pnw.crs))
    can.transformed <- spTransform(can.shp, CRS(pnw.crs))
-   lakes.transformed <- spTransform(lakes.shp, CRS(pnw.crs))
-   rivers.transformed <- spTransform(rivers.shp, CRS(pnw.crs))
+##   lakes.transformed <- spTransform(lakes.shp, CRS(pnw.crs))
+##   rivers.transformed <- spTransform(rivers.shp, CRS(pnw.crs))
  
    cx <- 1.5
 
@@ -196,13 +196,13 @@ make_pnw_multiplot <- function(morph.name,var.name,plot.title,
    lw <- 0.3
 ##   plot(us.transformed,col='lightgray',add=TRUE,lwd=lw)
 ##   plot(lakes.transformed,col='aliceblue',border='aliceblue',add=TRUE,lwd=lw)
-   plot(can.transformed,add=TRUE,lwd=lw)
+
 
 ##   plot(ocean.transformed,col='aliceblue',add=TRUE,lwd=lw)
    plot(grats,add=TRUE,lty=5,col='gray',lwd=lw)
+   plot(can.transformed,add=TRUE,lwd=lw)
 
-
-   rect(0.3*par("usr")[2], 0.92*par("usr")[4], 0.8*par("usr")[2], par("usr")[4], col='white',border='gray22')
+   rect(0.2*par("usr")[2], 0.92*par("usr")[4], 0.9*par("usr")[2], par("usr")[4], col='white',border='gray22')
    text(0.55*par("usr")[2], 0.96*par("usr")[4],plot.title,col='gray22')
 
    if (!is.null(epw.proj.coords)) {
@@ -221,8 +221,9 @@ make_pnw_multiplot <- function(morph.name,var.name,plot.title,
       axis(2,at=ytks,label=lats,cex.axis=cx,col='gray22',col.axis='gray22')
    }
    if (leg.add) {
+      coord <- par('usr')
       par(xpd=NA)
-      legend('topright', col = "gray22", legend=rev(map.class.breaks.labels), inset=c(-0.55,0),
+      legend(x=1.05*coord[2],y=coord[4], col = "gray22", legend=rev(map.class.breaks.labels), 
            pch=22, pt.bg = rev(colour.ramp),bg=alpha('white',0.95),box.col='gray22',text.col='gray22',
            pt.cex=3.0, y.intersp=0.8, title.adj=0.2, title=leg.title, xjust=0, cex=1.25)
       par(xpd=FALSE)

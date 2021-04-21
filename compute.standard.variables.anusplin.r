@@ -46,12 +46,12 @@ testing <- FALSE
 res <- NULL
 if (testing) {
    tmpdir <- '/local_temp/ssobie'
-   gcm <- 'ANUSPLIN'
-   scenario <- 'historical'
-   run <- 'r1i1p1f1' 
+   gcm <- 'BCCAQv2'
+   scenario <- 'rcp85'
+   run <- 'r1i1p1' 
    res <- NULL
-   type <- 'annual'
-   varname <- 'pr'
+   type <- 'annual_extremes'
+   varname <- 'tasmax'
    pctl <- '000'
 } else {
    args <- commandArgs(trailingOnly=TRUE)
@@ -78,7 +78,9 @@ gcm.dir <- base.dir
 ##gcm.file <- paste0('anusplin_',varname,'_final.nc')
 ##gcm.file <- list.files(path=gcm.dir,pattern=paste0(varname,'_allBC'))
 ##gcm.file <- paste0(varname,"_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc")
-gcm.file <- paste0(varname,"_BC_RCM-Grid_ANUSPLIN_day_19500101-20101231.nc")
+##gcm.file <- paste0(varname,"_BC_RCM-Grid_ANUSPLIN_day_19500101-20101231.nc")
+gcm.file <- paste0(varname,"_MBCn_iterated_trace_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc") 
+##gcm.file <- paste0(varname,"_BCCAQv2_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc")
 
 file.copy(from=paste0(gcm.dir,gcm.file),to=tmp.dir)
 print('Done copying gcm file')
@@ -172,7 +174,8 @@ for (j in 1:n.lat) {
    gcm.converted <- gcm_unit_conversion(varname,gcm.subset,gcm.nc)
    rm(gcm.subset)
 
-   flag <- is.na(gcm.converted[,1])
+   flag <- is.na(gcm.converted[,1000])
+
    gcm.list <- vector(mode='list',length=n.lon)
    gcm.list <- lapply(seq_len(nrow(gcm.converted)), function(k) gcm.converted[k,])
    rm(gcm.converted)

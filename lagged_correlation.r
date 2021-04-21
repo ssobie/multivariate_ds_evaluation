@@ -12,7 +12,21 @@ source('/storage/data/projects/rci/stat.downscaling/bccaq2/code/new.netcdf.calen
 ##Functions
 
 ##------------------------------------------------------------
-add_attributes_ncdf <- function(var.name='sp_cor', write.nc, gcm.nc) {
+##Lag-1 autocorrelation
+
+lag_autocorrelation <- function(x) {
+  lag <- 1
+  x.len <- length(x)
+  x1 <- x[1:(x.len-lag)]
+  x2 <- x[(lag+1):x.len]
+
+  acor.1 <- cor(x1,x2)
+
+}
+
+
+##------------------------------------------------------------
+add_attributes_ncdf <- function(var.name='lag_cor',  write.nc, gcm.nc, lag=1) {
 
   lon.atts <- ncatt_get(gcm.nc,'lon')
   print('Lon names')
@@ -25,8 +39,8 @@ add_attributes_ncdf <- function(var.name='sp_cor', write.nc, gcm.nc) {
   for (j in 1:length(lat.atts))
     ncatt_put(write.nc,varid='lat',attname=lat.names[j],attval=lat.atts[[j]])
   print('Var names')
-  ncatt_put(write.nc,varid=var.name,attname='standard_name',attval='spearman_correlation')
-  ncatt_put(write.nc,varid=var.name,attname='long_name',attval='Spearman Correlation')
+  ncatt_put(write.nc,varid=var.name,attname='standard_name',attval=paste0('Lag Corr. (',lag,'-day)'))
+  ncatt_put(write.nc,varid=var.name,attname='long_name',attval=paste0('Lag Corr. (',lag,'-day)'))
   ncatt_put(write.nc,varid=var.name,attname='missing_value',attval=1.e+20)
   ncatt_put(write.nc,varid=var.name,attname='_FillValue',attval=1.e+20)
 
@@ -55,14 +69,14 @@ get_var_units <- function(var.name) {
                 pr='',
                 tasmax='',
                 tasmin='',
-                sp_cor='')
+                lag_cor='')
    return(rv)
 }
 
 
 ##-----------------------------------------------------------
 
-make_empty_spearman_file <- function(var.name='sp_cor',base.file,sp.file,dir) {
+make_empty_lag_file <- function(var.name='lag_cor',base.file,lag.file,dir) {
 
   nc <- nc_open(paste0(dir,base.file),write=FALSE)
   lon <- ncvar_get(nc,'lon')
@@ -77,7 +91,7 @@ make_empty_spearman_file <- function(var.name='sp_cor',base.file,sp.file,dir) {
   var.geog <- ncvar_def(var.name, units=get_var_units(var.name),
                         dim=list(x.geog, y.geog,t.geog),
                         missval=1.e+20)
-  new.nc <- nc_create(paste(dir,sp.file,sep=''),var.geog)
+  new.nc <- nc_create(paste(dir,lag.file,sep=''),var.geog)
 
   add_attributes_ncdf(var.name, new.nc,nc)
   ncvar_put(new.nc,'lon',lon)
@@ -85,17 +99,14 @@ make_empty_spearman_file <- function(var.name='sp_cor',base.file,sp.file,dir) {
 
   nc_close(nc)
   nc_close(new.nc)
-  return(sp.file)
+  return(lag.file)
 
 }
 
-##Spearman (rank) correction of two variables
+##
 
-spearman_corr <- function(x,y){
 
-   spc <- cor(x,y,method='spearman')
 
-}
 
 ##Compare difference in Spearman Correlation between PNWNAmet and ANUSPLIN
 ##over the entire record, and for two subsets
@@ -112,20 +123,20 @@ clim_file <- function(input.file,output.file,tmp.dir) {
 
 ##-----------------------------------------------------------
 
-tmp.dir <- "/local_temp/ssobie/spear_corr/"
+tmp.dir <- "/local_temp/ssobie/lag_corr/"
 
 if (!file.exists(tmp.dir)) {
    dir.create(tmp.dir)
 }
 
-obs <- 'MBCn'
+obs <- 'BCCAQv2'
 
 seasons <- c('winter','spring','summer','fall','annual')
 
 for (season in seasons) {
 print(season)
 clim.bnds <- list(c(1951,1980),
-               c(1981,2010),
+                 c(1981,2010),
                c(2011,2040),
                c(2041,2070),
                c(2071,2100))
@@ -133,9 +144,10 @@ clim.bnds <- list(c(1951,1980),
 for (b in 1:5) {
 
 t.bnds <- clim.bnds[[b]]
-   
+
 interval <- paste0(t.bnds,collapse="-")
 print(interval)
+
 
 seas.grep <- switch(season,
                     winter='(12|01|02)', ##Winter
@@ -169,31 +181,24 @@ if (obs=='CanRCM4') {
    pr.file <- "pr_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
    tasmax.file <- "tasmax_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
    tasmin.file <- "tasmin_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
-   sp.dir <- paste0(obs.dir,'CanRCM4_Derived/spearman/')   
+   sp.dir <- paste0(obs.dir,'CanRCM4_Derived/lag_autocorrelation/')   
 }
 
 if (obs=='MBCn') {
    obs.dir <- "/storage/data/climate/downscale/RCM/CanRCM4/multivar_evaluation/rcm_grid/"
-   pr.file <- "pr_MBCn_iterated_trace_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
-
-   tasmax.file <- "tasmax_MBCn_iterated_trace_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
-   tasmin.file <- "tasmin_MBCn_iterated_trace_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
-   sp.dir <- paste0(obs.dir,'MBCn_Derived/spearman/')   
+   pr.file <- "pr_MBCn_iterated_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
+   tasmax.file <- "tasmax_MBCn_iterated_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
+   tasmin.file <- "tasmin_MBCn_iterated_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
+   sp.dir <- paste0(obs.dir,'MBCn_Derived/lag_autocorrelation/')   
 }
 
 if (obs=='BCCAQv2') {
    obs.dir <- "/storage/data/climate/downscale/RCM/CanRCM4/multivar_evaluation/rcm_grid/"
    pr.file <- "pr_BCCAQv2_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
-
    tasmax.file <- "tasmax_BCCAQv2_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
    tasmin.file <- "tasmin_BCCAQv2_BC_RCM-Grid_CCCma-CanESM2_historical-r1_r1i1p1_CCCma-CanRCM4_day_19500101-21001231.nc"
-   sp.dir <- paste0(obs.dir,'BCCAQv2_Derived/spearman/')   
-   if (!file.exists(sp.dir)) {
-      dir.create(sp.dir,recursive=TRUE)
-   }
-
+   sp.dir <- paste0(obs.dir,'BCCAQv2_Derived/lag_autocorrelation/')
 }
-
 
 file.copy(from=paste0(obs.dir,pr.file),to=tmp.dir)
 file.copy(from=paste0(obs.dir,tasmax.file),to=tmp.dir)
@@ -202,21 +207,22 @@ print('Done copying')
 
 ##Make file to store coefficients
 
-pr.tx.cor.file <- paste0(season,"_spearman_corr_pr_tasmax_BC_",obs,"_",interval,".nc") 
-make_empty_spearman_file(var.name='sp_cor',pr.file,pr.tx.cor.file,tmp.dir)
-pr.tx.nc <- nc_open(paste0(tmp.dir,pr.tx.cor.file),write=TRUE)
+pr.cor.file <- paste0(season,"_lag_corr_pr_BC_",obs,"_",interval,".nc") 
+make_empty_lag_file(var.name='lag_cor',pr.file,pr.cor.file,tmp.dir)
+pr.cor.nc <- nc_open(paste0(tmp.dir,pr.cor.file),write=TRUE)
 
-pr.tn.cor.file <- paste0(season,"_spearman_corr_pr_tasmin_BC_",obs,"_",interval,".nc")
-make_empty_spearman_file(var.name='sp_cor',pr.file,pr.tn.cor.file,tmp.dir)
-pr.tn.nc <- nc_open(paste0(tmp.dir,pr.tn.cor.file),write=TRUE)
+tx.cor.file <- paste0(season,"_lag_corr_tasmaxBC_",obs,"_",interval,".nc")
+make_empty_lag_file(var.name='lag_cor',tasmax.file,tx.cor.file,tmp.dir)
+tx.cor.nc <- nc_open(paste0(tmp.dir,tx.cor.file),write=TRUE)
 
-pr.ts.cor.file <- paste0(season,"_spearman_corr_pr_tas_BC_",obs,"_",interval,".nc")
-make_empty_spearman_file(var.name='sp_cor',pr.file,pr.ts.cor.file,tmp.dir)
-pr.ts.nc <- nc_open(paste0(tmp.dir,pr.ts.cor.file),write=TRUE)
+tn.cor.file <- paste0(season,"_lag_corr_tasmin_BC_",obs,"_",interval,".nc")
+make_empty_lag_file(var.name='lag_cor',tasmin.file,tn.cor.file,tmp.dir)
+tn.cor.nc <- nc_open(paste0(tmp.dir,tn.cor.file),write=TRUE)
 
-tx.tn.cor.file <- paste0(season,"_spearman_corr_tasmax_tasmin_BC_",obs,"_",interval,".nc")
-make_empty_spearman_file(var.name='sp_cor',pr.file,tx.tn.cor.file,tmp.dir)
-tx.tn.nc <- nc_open(paste0(tmp.dir,tx.tn.cor.file),write=TRUE)
+ts.cor.file <- paste0(season,"_lag_corr_tas_BC_",obs,"_",interval,".nc")
+make_empty_lag_file(var.name='lag_cor',tasmax.file,ts.cor.file,tmp.dir)
+ts.cor.nc <- nc_open(paste0(tmp.dir,ts.cor.file),write=TRUE)
+
 
 pnc <- nc_open(paste0(tmp.dir,pr.file))
 txc <- nc_open(paste0(tmp.dir,tasmax.file))
@@ -253,38 +259,36 @@ for (i in 1:length(lat)) {
    tasmin.list <- lapply(seq_len(nrow(tasmin)), function(k) tasmin[k,])
    tas <- (tasmax + tasmin) / 2
    tas.list <- lapply(seq_len(nrow(tas)), function(k) tas[k,])
-
    
-   pr.tx.cor <- mapply(FUN=spearman_corr,pr.list,tasmax.list)   
-   ncvar_put(pr.tx.nc,'sp_cor',pr.tx.cor,start=c(1,i,1),count=c(nlon,1,1))
+   pr.lag.cor <- lapply(pr.list,lag_autocorrelation)   
+   ncvar_put(pr.cor.nc,'lag_cor',pr.lag.cor,start=c(1,i,1),count=c(nlon,1,1))
 
-   pr.tn.cor <- mapply(FUN=spearman_corr,pr.list,tasmin.list)  
-   ncvar_put(pr.tn.nc,'sp_cor',pr.tn.cor,start=c(1,i,1),count=c(nlon,1,1)) 
+   tx.lag.cor <- lapply(tasmax.list,lag_autocorrelation)   
+   ncvar_put(tx.cor.nc,'lag_cor',tx.lag.cor,start=c(1,i,1),count=c(nlon,1,1)) 
 
-   pr.ts.cor <- mapply(FUN=spearman_corr,pr.list,tas.list)   
-   ncvar_put(pr.ts.nc,'sp_cor',pr.ts.cor,start=c(1,i,1),count=c(nlon,1,1))
+   tn.lag.cor <- lapply(tasmin.list,lag_autocorrelation)   
+   ncvar_put(tn.cor.nc,'lag_cor',tn.lag.cor,start=c(1,i,1),count=c(nlon,1,1))
    
-   tx.tn.cor <- mapply(FUN=spearman_corr,tasmax.list,tasmin.list)   
-   ncvar_put(tx.tn.nc,'sp_cor',tx.tn.cor,start=c(1,i,1),count=c(nlon,1,1))
+   ts.lag.cor <- lapply(tas.list,lag_autocorrelation)   
+   ncvar_put(ts.cor.nc,'lag_cor',ts.lag.cor,start=c(1,i,1),count=c(nlon,1,1))
 
-   ##pr.lag1 <- unlist(lapply(pr.list,lag1_autocorrelation))
-   ##ncvar_put(pr.lag1.nc,'sp_cor',pr.lag1,start=c(1,i,1),count=c(nlon,1,1))
 
 }
 
-nc_close(pr.tx.nc)
-nc_close(pr.tn.nc)
-nc_close(pr.ts.nc)
-nc_close(tx.tn.nc)
+nc_close(pr.cor.nc)
+nc_close(tx.cor.nc)
+nc_close(tn.cor.nc)
+nc_close(ts.cor.nc)
 
 nc_close(pnc)
 nc_close(tnc)
 nc_close(txc)
 
-file.copy(from=paste0(tmp.dir,pr.tx.cor.file),to=sp.dir,overwrite=TRUE)
-file.copy(from=paste0(tmp.dir,pr.tn.cor.file),to=sp.dir,overwrite=TRUE)
-file.copy(from=paste0(tmp.dir,pr.ts.cor.file),to=sp.dir,overwrite=TRUE)
-file.copy(from=paste0(tmp.dir,tx.tn.cor.file),to=sp.dir,overwrite=TRUE)
+file.copy(from=paste0(tmp.dir,pr.cor.file),to=sp.dir,overwrite=TRUE)
+file.copy(from=paste0(tmp.dir,tx.cor.file),to=sp.dir,overwrite=TRUE)
+file.copy(from=paste0(tmp.dir,tn.cor.file),to=sp.dir,overwrite=TRUE)
+file.copy(from=paste0(tmp.dir,ts.cor.file),to=sp.dir,overwrite=TRUE)
 
 }
+
 }
